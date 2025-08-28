@@ -1,0 +1,31 @@
+#!/bin/bash
+# Script para resetar MAC e reconectar no Wi-Fi em loop automático
+
+# --- CONFIGURAÇÕES ---
+INTERFACE="wlan0"                 # troque se sua placa tiver outro nome
+SSID="NOME_DA_REDE"               # nome do Wi-Fi
+PASSWORD="SENHA_DA_REDE"          # senha do Wi-Fi
+INTERVALO=30                      # tempo em MINUTOS entre cada reset
+
+while true; do
+    echo "============================================="
+    echo "[+] $(date) - Iniciando reset de conexão"
+    
+    echo "[+] Derrubando interface $INTERFACE..."
+    sudo ip link set $INTERFACE down
+
+    echo "[+] Gerando novo MAC..."
+    sudo macchanger -r $INTERFACE
+
+    echo "[+] Subindo interface..."
+    sudo ip link set $INTERFACE up
+
+    echo "[+] Reconectando ao Wi-Fi $SSID..."
+    nmcli device wifi connect "$SSID" password "$PASSWORD" ifname $INTERFACE
+
+    echo "[+] Novo MAC ativo:"
+    macchanger -s $INTERFACE | grep "Current"
+
+    echo "[+] Aguardando $INTERVALO minutos para o próximo reset..."
+    sleep $((INTERVALO*60))
+done
